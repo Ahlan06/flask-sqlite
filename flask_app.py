@@ -18,9 +18,12 @@ from functools import wraps
 
 from werkzeug.security import check_password_hash
 
+from bibliotheque import creer_bibliotheque
+
 from flask import Flask, render_template, request, redirect, url_for, session, abort, jsonify
 
 app = Flask(__name__)
+app.config.update(SESSION_COOKIE_SECURE=True, SESSION_COOKIE_SAMESITE='Lax')
 
 # Chemin ABSOLU vers la base de données.
 # Sur PythonAnywhere, le serveur ne démarre pas forcément dans le dossier
@@ -40,7 +43,7 @@ def get_db():
 def initialiser_application():
     if Path(DATABASE).is_file():
         with closing(get_db()) as conn:
-            for fichier in ('002_ajout_commandes.sql', '003_ajout_utilisateurs.sql'):
+            for fichier in ('002_ajout_commandes.sql', '003_ajout_utilisateurs.sql', '004_ajout_bibliotheque.sql'):
                 migration = Path(BASE_DIR, 'migrations', fichier)
                 conn.executescript(migration.read_text(encoding='utf-8'))
             app.secret_key = conn.execute(
@@ -56,7 +59,11 @@ def est_authentifie():
 
 
 def a_le_role(*roles):
-    return session.get('role') in roles
+    if session.get('role') not in roles:
+        return False
+    with closing(get_db()) as conn:
+        compte = conn.execute('SELECT role FROM utilisateurs WHERE id = ?', (session.get('utilisateur_id'),)).fetchone()
+    return compte is not None and compte['role'] == session.get('role')
 
 
 def acces(*roles):
@@ -352,5 +359,8 @@ def clients_api():
 #  Ne pas modifier : utile seulement pour lancer le site
 #  sur votre propre ordinateur (python flask_app.py)
 # ---------------------------------------------------------------
+app.register_blueprint(creer_bibliotheque(get_db, acces, est_authentifie))
+
+
 if __name__ == "__main__":
     app.run(debug=True)

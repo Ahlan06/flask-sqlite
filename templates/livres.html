@@ -1,0 +1,41 @@
+{% extends 'bibliotheque_base.html' %}
+{% block titre %}Catalogue de la bibliothèque{% endblock %}
+{% block contenu %}
+<h1>Catalogue de la bibliothèque</h1>
+<form>
+    <label for="q">Titre ou auteur</label>
+    <input id="q" name="q" value="{{ q }}">
+    <button>Rechercher</button>
+</form>
+{% if session.get('role') == 'admin' %}
+<p><a href="{{ url_for('bibliotheque.modifier_livre') }}">Ajouter un livre</a></p>
+{% endif %}
+<div class="tableau"><table>
+    <thead><tr><th>Titre</th><th>Auteur</th><th>Disponibilité</th><th>Actions</th></tr></thead>
+    <tbody>
+    {% for livre in livres %}
+        <tr>
+            <td>{{ livre['titre'] }}</td>
+            <td>{{ livre['auteur'] }}</td>
+            <td>{{ livre['nb_disponibles'] }} sur {{ livre['nb_exemplaires'] }}</td>
+            <td>
+                {% if session.get('role') == 'admin' %}
+                <a href="{{ url_for('bibliotheque.modifier_livre', livre_id=livre['id']) }}">Modifier</a>
+                <form method="post" action="{{ url_for('bibliotheque.supprimer_livre', livre_id=livre['id']) }}" onsubmit="return confirm('Supprimer ce livre ?');">
+                    <button>Supprimer</button>
+                </form>
+                {% elif livre['nb_disponibles'] > 0 %}
+                <form method="post" action="{{ url_for('bibliotheque.emprunter', livre_id=livre['id']) }}">
+                    <button>Emprunter</button>
+                </form>
+                {% else %}
+                Indisponible
+                {% endif %}
+            </td>
+        </tr>
+    {% else %}
+        <tr><td colspan="4">Aucun livre trouvé.</td></tr>
+    {% endfor %}
+    </tbody>
+</table></div>
+{% endblock %}

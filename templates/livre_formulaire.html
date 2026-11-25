@@ -1,0 +1,20 @@
+{% extends 'bibliotheque_base.html' %}
+{% block titre %}{{ 'Modifier le livre' if livre_id else 'Ajouter un livre' }}{% endblock %}
+{% block contenu %}
+<h1>{{ 'Modifier le livre' if livre_id else 'Ajouter un livre' }}</h1>
+<form method="post" class="champs">
+    <label for="titre">Titre</label>
+    <input id="titre" name="titre" value="{{ livre.get('titre', '') }}" required>
+    <label for="auteur">Auteur</label>
+    <input id="auteur" name="auteur" value="{{ livre.get('auteur', '') }}" required>
+    <label for="isbn">ISBN</label>
+    <input id="isbn" name="isbn" value="{{ livre.get('isbn') or '' }}">
+    <label for="annee">Année</label>
+    <input id="annee" name="annee" type="number" min="1" max="9999" value="{{ livre.get('annee') or '' }}">
+    <label for="genre">Genre</label>
+    <input id="genre" name="genre" value="{{ livre.get('genre') or '' }}">
+    <label for="nb_exemplaires">Nombre d’exemplaires</label>
+    <input id="nb_exemplaires" name="nb_exemplaires" type="number" min="0" max="1000000" value="{{ livre.get('nb_exemplaires', 1) }}" required>
+    <p><button>Enregistrer</button> <a href="{{ url_for('bibliotheque.livres') }}">Annuler</a></p>
+</form>
+{% endblock %}

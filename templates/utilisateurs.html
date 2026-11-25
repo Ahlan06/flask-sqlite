@@ -1,0 +1,26 @@
+{% extends 'bibliotheque_base.html' %}
+{% block titre %}Gestion des utilisateurs{% endblock %}
+{% block contenu %}
+<h1>Gestion des utilisateurs</h1>
+<form method="post" class="champs">
+    <label for="login">Identifiant</label>
+    <input id="login" name="login" required>
+    <label for="password">Mot de passe (12 caractères minimum)</label>
+    <input id="password" name="password" type="password" minlength="12" autocomplete="new-password" required>
+    <label for="role">Rôle</label>
+    <select id="role" name="role"><option value="user">Utilisateur</option><option value="admin">Administrateur</option></select>
+    <p><button>Créer le compte</button></p>
+</form>
+<ul>
+    {% for compte in utilisateurs %}
+    <li>
+        {{ compte['login'] }} — {{ compte['role'] }}
+        {% if compte['id'] != session.get('utilisateur_id') %}
+        <form method="post" action="{{ url_for('bibliotheque.supprimer_utilisateur', utilisateur_id=compte['id']) }}" onsubmit="return confirm('Supprimer ce compte ?');">
+            <button>Supprimer</button>
+        </form>
+        {% endif %}
+    </li>
+    {% endfor %}
+</ul>
+{% endblock %}

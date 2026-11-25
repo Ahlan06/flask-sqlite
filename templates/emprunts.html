@@ -1,0 +1,16 @@
+{% extends 'bibliotheque_base.html' %}
+{% block titre %}Emprunts en cours{% endblock %}
+{% block contenu %}
+<h1>{{ 'Emprunts en cours' if session.get('role') == 'admin' else 'Mes emprunts' }}</h1>
+<ul>
+    {% for emprunt in emprunts %}
+    <li>
+        {{ emprunt['titre'] }}{% if session.get('role') == 'admin' %} — {{ emprunt['login'] }}{% endif %}
+        · Retour prévu le {{ emprunt['date_retour_prevue'] }}
+        <form method="post" action="{{ url_for('bibliotheque.rendre', emprunt_id=emprunt['id']) }}"><button>Rendre</button></form>
+    </li>
+    {% else %}
+    <li>Aucun emprunt en cours.</li>
+    {% endfor %}
+</ul>
+{% endblock %}

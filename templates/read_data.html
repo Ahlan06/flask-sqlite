@@ -11,6 +11,7 @@
 </head>
 <body>
     <h1>Liste des Clients</h1>
+    <p><a href="{{ url_for('bibliotheque.livres') }}">Catalogue de la bibliothèque</a></p>
     <form method="post" action="{{ url_for('deconnexion') }}">
         <button type="submit">Se déconnecter</button>
     </form>

@@ -11,6 +11,30 @@ Dans cet atelier, vous allez **mettre en ligne une petite application Web relié
 **Prérequis :** savoir lire quelques lignes de Python. Aucune connaissance en base de données n'est nécessaire.
 **Ce qu'il vous faut :** un navigateur (Chrome, Firefox ou Edge), un compte GitHub et une adresse e-mail.
 
+
+## Bibliothèque en ligne
+
+Le projet est intégré au site de l’atelier. [Ouvrir le catalogue](https://ahlan06.pythonanywhere.com/livres)
+
+Les comptes de test sont `admin` (administration) et `user` et `user2` (emprunts). Les mots de passe de démonstration sont transmis séparément.
+
+Le catalogue permet la recherche par titre ou auteur et calcule les exemplaires disponibles. Les utilisateurs peuvent emprunter jusqu’à trois livres, consulter leurs prêts en cours et rendre leurs livres. L’administration gère les livres et les comptes. Les réservations et les rappels ne sont pas implémentés.
+
+| Page ou API | Rôle |
+|---|---|
+| `GET /livres?q=petit` | Catalogue et recherche pour les utilisateurs connectés |
+| `POST /livres/<id>/emprunter` | Créer un prêt en tant qu’utilisateur |
+| `GET /emprunts` | Voir ses prêts ou tous les prêts en tant qu’admin |
+| `POST /emprunts/<id>/rendre` | Enregistrer le retour par le titulaire ou un admin |
+| `GET/POST /admin/livres/nouveau`, `GET/POST /admin/livres/<id>/modifier` | Créer ou modifier un livre en tant qu’admin |
+| `POST /admin/livres/<id>/supprimer` | Supprimer un livre sans historique en tant qu’admin |
+| `GET/POST /admin/utilisateurs`, `POST /admin/utilisateurs/<id>/supprimer` | Gérer les comptes en tant qu’admin |
+| `GET /api/livres`, `GET /api/livres/<id>` | Lire le catalogue et la disponibilité en JSON |
+| `GET/POST /api/clients`, `GET/DELETE /api/clients/<id>` | Lire les clients connecté. La création et la suppression sont réservées aux admins |
+
+Le [schéma SQLite](schema.sql) relie `emprunts.livre_id` à `livres.id` et `emprunts.utilisateur_id` à `utilisateurs.id`. La date de retour reste vide tant que le prêt est en cours. Les migrations du catalogue et des comptes s’appliquent au démarrage sur une base existante.
+
+
 ---
 
 ## 🗺️ Comment ça marche ?

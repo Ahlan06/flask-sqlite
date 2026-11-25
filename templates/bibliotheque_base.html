@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block titre %}Bibliothèque{% endblock %}</title>
+    <style>
+        body { margin: 0 auto; padding: 1.5rem; max-width: 64rem; font: 1rem/1.55 system-ui, sans-serif; color: #192c2c; background: #f7f8f4; }
+        nav { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; border-bottom: 1px solid #b6c1ba; padding-bottom: 1rem; }
+        a { color: #175e4d; }
+        form { margin-block: 1rem; }
+        nav form, td form { margin: 0; }
+        input, select, button { font: inherit; padding: .3rem .5rem; max-width: 100%; }
+        button { cursor: pointer; }
+        table { border-collapse: collapse; width: 100%; }
+        th, td { padding: .6rem; border-bottom: 1px solid #b6c1ba; text-align: left; }
+        .tableau { overflow-x: auto; }
+        .champs label { display: block; margin-top: .65rem; }
+    </style>
+</head>
+<body>
+    <nav aria-label="Navigation principale">
+        <a href="{{ url_for('hello_world') }}">Accueil</a>
+        <a href="{{ url_for('bibliotheque.livres') }}">Catalogue</a>
+        <a href="{{ url_for('bibliotheque.mes_emprunts') }}">Emprunts</a>
+        {% if session.get('role') == 'admin' %}
+        <a href="{{ url_for('bibliotheque.utilisateurs') }}">Utilisateurs</a>
+        {% endif %}
+        <form method="post" action="{{ url_for('deconnexion') }}"><button>Se déconnecter</button></form>
+    </nav>
+    <main>{% block contenu %}{% endblock %}</main>
+</body>
+</html>

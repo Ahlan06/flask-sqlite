@@ -242,19 +242,19 @@ SELECT COUNT(*) FROM clients WHERE adresse LIKE '%Paris%';
 
 1. Pourquoi ne supprime-t-on pas un emprunt quand le livre est rendu ?
 
-   > _Ma réponse :_ 
+   > _Ma réponse :_ La date de retour termine le prêt et libère un exemplaire. La ligne reste disponible pour consulter l’historique des emprunts.
 
 2. Pourquoi calculer la disponibilité d'un livre plutôt que de la stocker dans une colonne ?
 
-   > _Ma réponse :_ 
+   > _Ma réponse :_ La disponibilité est le stock moins les emprunts en cours. Une deuxième valeur stockée pourrait devenir incorrecte si une création ou un retour mettait à jour une seule des deux valeurs.
 
 3. Quelle a été la plus grande difficulté rencontrée pendant le projet, et comment l'avez-vous surmontée ?
 
-   > _Ma réponse :_ 
+   > _Ma réponse :_ La difficulté principale était de vérifier le stock et la limite de trois prêts avant de créer un emprunt. Une transaction SQLite regroupe ces opérations et empêche deux écritures concurrentes de réserver le dernier exemplaire.
 
 4. Quelles fonctionnalités n'avez-vous pas eu le temps de réaliser ? Comment vous y prendriez-vous ?
 
-   > _Ma réponse :_ 
+   > _Ma réponse :_ Les bonus comme les réservations et les rappels restent à faire. Une table de réservations reliée aux livres et aux comptes permettrait de gérer une file d’attente.
 
 ---
 
@@ -262,4 +262,4 @@ SELECT COUNT(*) FROM clients WHERE adresse LIKE '%Paris%';
 
 En quelques phrases, expliquez à un ami ce qui se passe entre le moment où il clique sur « Enregistrer » dans un formulaire et celui où l'information s'affiche dans une liste :
 
-> _Ma réponse :_ 
+> _Ma réponse :_ Le navigateur envoie les champs à Flask en POST. Flask vérifie les données, les transmet à SQLite avec une requête paramétrée et valide la transaction. Une redirection envoie ensuite le navigateur vers une page qui relit la base et affiche les données en HTML.
