@@ -1,12 +1,12 @@
 # 📒 Mon carnet de bord
 
-**Nom :** 
+**Nom :MIRA** 
 
-**Prénom :** 
+**Prénom : Ahlan** 
 
-**Adresse de mon site :** https://______.pythonanywhere.com
+**Adresse de mon site :** https://ahlan06.pythonanywhere.com
 
-**Adresse de mon dépôt GitHub :** https://github.com/______
+**Adresse de mon dépôt GitHub :** https://github.com/ahlan06/flask-sqlite
 
 > Modifiez ce fichier directement sur GitHub (icône crayon ✏️) pour répondre aux questions de chaque exercice.
 > Écrivez avec vos propres mots : une réponse courte et juste vaut mieux qu'un long copier-coller ! 🙂
