@@ -70,23 +70,23 @@
 
 1. Quelle est la différence entre `WHERE nom = 'DUPONT'` et `WHERE nom LIKE '%DUP%'` ?
 
-   > _Ma réponse :_ 
+   > _Ma réponse :_ `=` cherche le nom exact. `LIKE '%DUP%'` exige seulement que le nom contienne DUP, où que ce soit.
 
 2. Expliquez avec vos mots ce qu'est une **injection SQL**. Qu'est-ce qu'un pirate pourrait faire de pire qu'afficher tous les clients ?
 
-   > _Ma réponse :_ 
+   > _Ma réponse :_ Une injection SQL se produit quand une saisie est interprétée comme une partie de la requête. Selon les droits de l’application, cela peut exposer des informations privées, modifier ou effacer des données.
 
 3. Pourquoi la version avec `?` est-elle protégée contre l'injection ?
 
-   > _Ma réponse :_ 
+   > _Ma réponse :_ SQLite reçoit la requête et ses paramètres séparément. La saisie est donc traitée comme une valeur.
 
 4. Pour la recherche, on a utilisé `method="get"`. Quel avantage pour l'utilisateur ? (Indice : favoris, partage de lien.)
 
-   > _Ma réponse :_ 
+   > _Ma réponse :_ La recherche et le tri apparaissent dans l’URL. On peut mettre le résultat en favori ou partager le lien.
 
 🧩 **Défi** — mes requêtes / ma solution :
 
-   > 
+   > Le menu propose trois tris. Python associe chaque choix à un ordre SQL prédéfini et utilise le tri par nom si le choix est inconnu.
 
 ---
 
@@ -94,19 +94,21 @@
 
 1. Quelles étaient les deux anomalies du formulaire d'origine, et d'où venaient-elles ?
 
-   > _Ma réponse :_ 
+   > _Ma réponse :_ L’adresse valait toujours `ICI` parce que le formulaire ne la demandait pas et que le code imposait cette valeur. La date était incorrecte parce que l’INSERT imposait la valeur `1002938`.
 
 2. Pourquoi la validation côté **navigateur** (`required`) ne suffit-elle pas ? Pourquoi la garder quand même ?
 
-   > _Ma réponse :_ 
+   > _Ma réponse :_ Le navigateur peut être contourné, par exemple en envoyant le formulaire directement au serveur. `required` reste utile pour signaler tout de suite un champ oublié.
 
 3. À quoi sert `conn.commit()` ? Que se passe-t-il sans lui ?
 
-   > _Ma réponse :_ 
+   > _Ma réponse :_ `conn.commit()` valide la transaction. Si on ferme la connexion sans valider, SQLite annule l’insertion. Ici, le bloc `with conn` valide automatiquement si tout réussit.
 
 4. Pourquoi redirige-t-on vers `/consultation/` après l'enregistrement, au lieu d'afficher directement une page ? (Indice : essayez d'appuyer sur F5 après l'envoi.)
 
-   > _Ma réponse :_ 
+   > _Ma réponse :_ La redirection transforme l’affichage suivant en requête GET. Actualiser la page recharge la liste ou la fiche sans renvoyer le formulaire.
+
+🧩 **Défi** — Après l’insertion, je récupère `cursor.lastrowid` pour rediriger vers la fiche du nouveau client.
 
 ---
 
@@ -114,19 +116,21 @@
 
 1. Que signifie CRUD ? Donnez la requête SQL correspondant à chaque lettre.
 
-   > _Ma réponse :_ 
+   > _Ma réponse :_ CRUD signifie créer (`INSERT`), lire (`SELECT`), modifier (`UPDATE`) et supprimer (`DELETE`).
 
 2. Que se passe-t-il si l'on oublie le `WHERE` dans un `UPDATE` ou un `DELETE` ? À quoi servent `BEGIN` et `ROLLBACK` ?
 
-   > _Ma réponse :_ 
+   > _Ma réponse :_ Sans `WHERE`, la requête s’applique à toutes les lignes de la table. `BEGIN` ouvre une transaction et `ROLLBACK` annule ses changements avant validation.
 
 3. Pourquoi ne faut-il **jamais** supprimer des données avec une requête GET (un simple lien) ? (Indice : les moteurs de recherche et certains navigateurs « visitent » les liens à l'avance.)
 
-   > _Ma réponse :_ 
+   > _Ma réponse :_ Un lien GET peut être ouvert automatiquement par un navigateur ou un moteur de recherche. Un formulaire POST envoie une demande de suppression lors de sa soumission.
 
 4. Une fois un `id` supprimé, pourquoi est-il préférable qu'il ne soit jamais réattribué à un autre client ?
 
-   > _Ma réponse :_ 
+   > _Ma réponse :_ Des liens ou des données liées peuvent encore faire référence à l’ancien identifiant. Le réutiliser pointerait alors vers un autre client.
+
+🧩 **Défi** — La suppression logique permet de restaurer un client, de garder son historique et de conserver ses liens avec d’autres données. Les listes courantes filtrent les clients actifs.
 
 ---
 
@@ -134,19 +138,21 @@
 
 1. Quelle est la différence entre le **schéma** d'une base et ses **données** ? Où se trouve chacun ?
 
-   > _Ma réponse :_ 
+   > _Ma réponse :_ Le schéma décrit les tables, les colonnes et leurs contraintes. Il est documenté dans `schema.sql` et appliqué dans `database.db`, qui contient aussi les lignes des clients.
 
 2. Pourquoi ne faut-il pas relancer `create_db.py` sur une application en production ?
 
-   > _Ma réponse :_ 
+   > _Ma réponse :_ `create_db.py` exécute le script de création qui supprime d’abord la table. Les données saisies en production seraient perdues.
 
 3. Pourquoi est-il important de garder `schema.sql` à jour, même si on a modifié la base avec `ALTER TABLE` ?
 
-   > _Ma réponse :_ 
+   > _Ma réponse :_ Une nouvelle installation doit créer une base avec les mêmes colonnes que le serveur existant, où la migration a déjà été appliquée.
 
 4. Pour ajouter **une** information, combien de fichiers avez-vous dû modifier ? Lesquels ?
 
-   > _Ma réponse :_ 
+   > _Ma réponse :_ Cinq fichiers servent à la modification : `schema.sql`, `flask_app.py`, `formulaire.html`, `modifier_client.html` et `read_data.html`. La migration ajoute un sixième fichier.
+
+🧩 **Défi** — Le fichier `migrations/001_ajout_telephone.sql` conserve la commande exacte à appliquer. Les numéros indiquent l’ordre des changements pour faire évoluer la base de la même façon sur chaque serveur.
 
 ---
 

@@ -1,4 +1,4 @@
-<!DOCTYPE>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
@@ -20,6 +20,8 @@
             <th>Nom</th>
             <th>Prénom</th>
             <th>Adresse</th>
+            <th>Téléphone</th>
+            <th>Actions</th>
         </tr>
         {% for row in data %}
         <tr>
@@ -28,6 +30,14 @@
             <td><a href="/fiche_client/{{ row['id'] }}">{{ row['nom'] }}</a></td>
             <td>{{ row['prenom'] }}</td>
             <td>{{ row['adresse'] }}</td>
+            <td>{{ row['telephone'] or '-' }}</td>
+            <td>
+                <a href="{{ url_for('modifier_client', client_id=row['id']) }}">Modifier</a>
+                <form action="{{ url_for('supprimer_client', client_id=row['id']) }}" method="post"
+                      onsubmit="return confirm('Supprimer ce client ?');">
+                    <button type="submit">Supprimer</button>
+                </form>
+            </td>
         </tr>
         {% endfor %}
     </table>

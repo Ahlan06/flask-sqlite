@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modifier un client</title>
+</head>
+<body>
+    <h1>Modifier un client</h1>
+    {% if erreur %}<p role="alert">{{ erreur }}</p>{% endif %}
+    {% set valeurs = valeurs|default({}) %}
+    <form action="{{ url_for('modifier_client', client_id=client_id) }}" method="POST">
+        <label for="nom">Nom :</label>
+        <input type="text" id="nom" name="nom" value="{{ valeurs.get('nom', '') }}" required><br><br>
+        <label for="prenom">Prénom :</label>
+        <input type="text" id="prenom" name="prenom" value="{{ valeurs.get('prenom', '') }}" required><br><br>
+        <label for="adresse">Adresse :</label>
+        <input type="text" id="adresse" name="adresse" value="{{ valeurs.get('adresse', '') }}" required><br><br>
+        <label for="telephone">Téléphone (facultatif) :</label>
+        <input type="tel" id="telephone" name="telephone" value="{{ valeurs.get('telephone') or '' }}"><br><br>
+        <button type="submit">Enregistrer</button>
+    </form>
+    <p><a href="{{ url_for('ReadBDD') }}">Annuler</a></p>
+</body>
+</html>

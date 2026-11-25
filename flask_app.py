@@ -11,8 +11,9 @@
 
 import os
 import sqlite3
+from contextlib import closing
 
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for, session, abort
 
 app = Flask(__name__)
 app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'  # Clé secrète pour signer les sessions (à cacher par la suite)
@@ -101,18 +102,19 @@ def fiche_nom(nom):
 @app.route('/recherche')
 def recherche():
     q = request.args.get('q', '').strip()
+    tris = {'nom': 'nom, prenom, id', 'prenom': 'prenom, nom, id', 'created': 'created DESC, id DESC'}
+    tri = request.args.get('tri', 'nom')
+    if tri not in tris:
+        tri = 'nom'
     data = []
     if q:
-        conn = get_db()
-        cursor = conn.cursor()
         motif = '%' + q + '%'
-        cursor.execute(
-            'SELECT * FROM clients WHERE nom LIKE ? OR prenom LIKE ? ORDER BY nom',
-            (motif, motif),
-        )
-        data = cursor.fetchall()
-        conn.close()
-    return render_template('recherche.html', q=q, data=data)
+        with closing(get_db()) as conn:
+            data = conn.execute(
+                'SELECT * FROM clients WHERE nom LIKE ? OR prenom LIKE ? ORDER BY ' + tris[tri],
+                (motif, motif),
+            ).fetchall()
+    return render_template('recherche.html', q=q, tri=tri, data=data)
 
 
 @app.route('/enregistrer_client', methods=['GET'])
@@ -122,18 +124,54 @@ def formulaire_client():
 
 @app.route('/enregistrer_client', methods=['POST'])
 def enregistrer_client():
-    nom = request.form['nom']
-    prenom = request.form['prenom']
+    champs_obligatoires = ('nom', 'prenom', 'adresse')
+    valeurs = {champ: request.form.get(champ, '').strip() for champ in (*champs_obligatoires, 'telephone')}
+    if not all(valeurs[champ] for champ in champs_obligatoires):
+        return render_template('formulaire.html', valeurs=valeurs, erreur='Le nom, le prénom et l’adresse sont obligatoires.'), 400
 
-    # Connexion à la base de données
-    conn = get_db()
-    cursor = conn.cursor()
+    with closing(get_db()) as conn, conn:
+        cursor = conn.execute(
+            'INSERT INTO clients (nom, prenom, adresse, telephone) VALUES (?, ?, ?, ?)',
+            (valeurs['nom'], valeurs['prenom'], valeurs['adresse'], valeurs['telephone'] or None),
+        )
+        client_id = cursor.lastrowid
+    return redirect(url_for('Readfiche', post_id=client_id))
 
-    # Exécution de la requête SQL pour insérer un nouveau client
-    cursor.execute('INSERT INTO clients (created, nom, prenom, adresse) VALUES (?, ?, ?, ?)', (1002938, nom, prenom, "ICI"))
-    conn.commit()
-    conn.close()
-    return redirect('/consultation/')  # Rediriger vers la liste des clients après l'enregistrement
+
+@app.route('/modifier_client/<int:client_id>', methods=['GET', 'POST'])
+def modifier_client(client_id):
+    champs_obligatoires = ('nom', 'prenom', 'adresse')
+    with closing(get_db()) as conn:
+        if request.method == 'GET':
+            client = conn.execute('SELECT * FROM clients WHERE id = ?', (client_id,)).fetchone()
+            if client is None:
+                abort(404, description='Client introuvable')
+            return render_template('modifier_client.html', client_id=client_id, valeurs=dict(client))
+
+        valeurs = {champ: request.form.get(champ, '').strip() for champ in (*champs_obligatoires, 'telephone')}
+        if not all(valeurs[champ] for champ in champs_obligatoires):
+            return render_template(
+                'modifier_client.html', client_id=client_id, valeurs=valeurs,
+                erreur='Le nom, le prénom et l’adresse sont obligatoires.',
+            ), 400
+
+        with conn:
+            resultat = conn.execute(
+                'UPDATE clients SET nom = ?, prenom = ?, adresse = ?, telephone = ? WHERE id = ?',
+                (valeurs['nom'], valeurs['prenom'], valeurs['adresse'], valeurs['telephone'] or None, client_id),
+            )
+            if not resultat.rowcount:
+                abort(404, description='Client introuvable')
+    return redirect(url_for('ReadBDD'))
+
+
+@app.post('/supprimer_client/<int:client_id>')
+def supprimer_client(client_id):
+    with closing(get_db()) as conn, conn:
+        resultat = conn.execute('DELETE FROM clients WHERE id = ?', (client_id,))
+        if not resultat.rowcount:
+            abort(404, description='Client introuvable')
+    return redirect(url_for('ReadBDD'))
 
 
 # ---------------------------------------------------------------

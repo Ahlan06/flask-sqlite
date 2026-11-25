@@ -8,6 +8,12 @@
     <h1>Rechercher un client</h1>
     <form action="/recherche" method="get">
         <input type="text" name="q" value="{{ q }}" placeholder="Nom ou prénom...">
+        <label for="tri">Trier par</label>
+        <select id="tri" name="tri">
+            <option value="nom"{% if tri == 'nom' %} selected{% endif %}>Nom</option>
+            <option value="prenom"{% if tri == 'prenom' %} selected{% endif %}>Prénom</option>
+            <option value="created"{% if tri == 'created' %} selected{% endif %}>Date de création (récente d’abord)</option>
+        </select>
         <button type="submit">Rechercher</button>
     </form>
 
