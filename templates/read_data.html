@@ -11,6 +11,13 @@
 </head>
 <body>
     <h1>Liste des Clients</h1>
+    <form method="post" action="{{ url_for('deconnexion') }}">
+        <button type="submit">Se déconnecter</button>
+    </form>
+    <p><a href="{{ url_for('clients_api') }}">Rechercher via l’API</a></p>
+    {% if session.get('role') == 'admin' %}
+    <p><a href="{{ url_for('formulaire_client') }}">Enregistrer un client</a></p>
+    {% endif %}
     <p><a href="/recherche">Rechercher un client</a></p>
     <p><a href="{{ url_for('commandes') }}">Commandes</a> · <a href="{{ url_for('statistiques') }}">Statistiques</a></p>
     <p>{{ data|length }} client(s) dans la base.</p>
@@ -22,7 +29,7 @@
             <th>Prénom</th>
             <th>Adresse</th>
             <th>Téléphone</th>
-            <th>Actions</th>
+            {% if session.get('role') == 'admin' %}<th>Actions</th>{% endif %}
         </tr>
         {% for row in data %}
         <tr>
@@ -32,6 +39,7 @@
             <td>{{ row['prenom'] }}</td>
             <td>{{ row['adresse'] }}</td>
             <td>{{ row['telephone'] or '-' }}</td>
+            {% if session.get('role') == 'admin' %}
             <td>
                 <a href="{{ url_for('modifier_client', client_id=row['id']) }}">Modifier</a>
                 <form action="{{ url_for('supprimer_client', client_id=row['id']) }}" method="post"
@@ -39,6 +47,7 @@
                     <button type="submit">Supprimer</button>
                 </form>
             </td>
+            {% endif %}
         </tr>
         {% endfor %}
     </table>

@@ -17,6 +17,7 @@
         <li>Aucune commande.</li>
     {% endfor %}
     </ul>
+    {% if session.get('role') == 'admin' %}
     <form method="post" action="{{ url_for('ajouter_commande', client_id=client['id']) }}">
         <label for="produit">Produit</label>
         <input id="produit" name="produit" required>
@@ -24,6 +25,7 @@
         <input id="montant" name="montant" type="number" min="0" step="0.01" required>
         <button type="submit">Ajouter la commande</button>
     </form>
+    {% endif %}
     <p><a href="/consultation/">Retour à la liste des clients</a></p>
 </body>
 </html>

@@ -14,11 +14,13 @@ import sqlite3
 from contextlib import closing
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
+from functools import wraps
 
-from flask import Flask, render_template, request, redirect, url_for, session, abort
+from werkzeug.security import check_password_hash
+
+from flask import Flask, render_template, request, redirect, url_for, session, abort, jsonify
 
 app = Flask(__name__)
-app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'  # Clé secrète pour signer les sessions (à cacher par la suite)
 
 # Chemin ABSOLU vers la base de données.
 # Sur PythonAnywhere, le serveur ne démarre pas forcément dans le dossier
@@ -35,20 +37,39 @@ def get_db():
     return conn
 
 
-def installer_table_commandes():
-    """Ajoute la table à une base existante lors du chargement de l’application."""
+def initialiser_application():
     if Path(DATABASE).is_file():
-        migration = Path(BASE_DIR, 'migrations', '002_ajout_commandes.sql')
         with closing(get_db()) as conn:
-            conn.executescript(migration.read_text(encoding='utf-8'))
+            for fichier in ('002_ajout_commandes.sql', '003_ajout_utilisateurs.sql'):
+                migration = Path(BASE_DIR, 'migrations', fichier)
+                conn.executescript(migration.read_text(encoding='utf-8'))
+            app.secret_key = conn.execute(
+                "SELECT valeur FROM configuration WHERE nom = 'secret_session'"
+            ).fetchone()[0]
 
 
-installer_table_commandes()
+initialiser_application()
 
 
-# Fonction pour savoir si l'utilisateur s'est authentifié
 def est_authentifie():
-    return session.get('authentifie')
+    return a_le_role('admin', 'user')
+
+
+def a_le_role(*roles):
+    return session.get('role') in roles
+
+
+def acces(*roles):
+    def decorateur(route):
+        @wraps(route)
+        def verifier(*args, **kwargs):
+            if not est_authentifie():
+                return redirect(url_for('authentification'))
+            if not a_le_role(*roles):
+                abort(403)
+            return route(*args, **kwargs)
+        return verifier
+    return decorateur
 
 
 @app.route('/')
@@ -69,19 +90,26 @@ def lecture():
 @app.route('/authentification', methods=['GET', 'POST'])
 def authentification():
     if request.method == 'POST':
-        # Vérifier les identifiants
-        if request.form['username'] == 'admin' and request.form['password'] == 'password':  # password à cacher par la suite
-            session['authentifie'] = True
-            # Rediriger vers la route lecture après une authentification réussie
-            return redirect(url_for('lecture'))
-        else:
-            # Afficher un message d'erreur si les identifiants sont incorrects
-            return render_template('formulaire_authentification.html', error=True)
+        login = request.form.get('username', '').strip()
+        with closing(get_db()) as conn:
+            compte = conn.execute('SELECT * FROM utilisateurs WHERE login = ?', (login,)).fetchone()
+        if compte and check_password_hash(compte['mot_de_passe_hash'], request.form.get('password', '')):
+            session.clear()
+            session.update(utilisateur_id=compte['id'], role=compte['role'])
+            return redirect(url_for('ReadBDD'))
+        return render_template('formulaire_authentification.html', error=True), 401
 
     return render_template('formulaire_authentification.html', error=False)
 
 
+@app.post('/deconnexion')
+def deconnexion():
+    session.clear()
+    return redirect(url_for('authentification'))
+
+
 @app.route('/fiche_client/<int:post_id>')
+@acces('admin', 'user')
 def Readfiche(post_id):
     with closing(get_db()) as conn:
         client = conn.execute('SELECT * FROM clients WHERE id = ?', (post_id,)).fetchone()
@@ -95,6 +123,7 @@ def Readfiche(post_id):
 
 
 @app.route('/consultation/')
+@acces('admin', 'user')
 def ReadBDD():
     conn = get_db()
     cursor = conn.cursor()
@@ -105,6 +134,7 @@ def ReadBDD():
 
 
 @app.route('/fiche_nom/<nom>')
+@acces('admin', 'user')
 def fiche_nom(nom):
     conn = get_db()
     cursor = conn.cursor()
@@ -115,6 +145,7 @@ def fiche_nom(nom):
 
 
 @app.route('/recherche')
+@acces('admin', 'user')
 def recherche():
     q = request.args.get('q', '').strip()
     tris = {'nom': 'nom, prenom, id', 'prenom': 'prenom, nom, id', 'created': 'created DESC, id DESC'}
@@ -133,11 +164,13 @@ def recherche():
 
 
 @app.route('/enregistrer_client', methods=['GET'])
+@acces('admin')
 def formulaire_client():
     return render_template('formulaire.html')  # afficher le formulaire
 
 
 @app.route('/enregistrer_client', methods=['POST'])
+@acces('admin')
 def enregistrer_client():
     champs_obligatoires = ('nom', 'prenom', 'adresse')
     valeurs = {champ: request.form.get(champ, '').strip() for champ in (*champs_obligatoires, 'telephone')}
@@ -154,6 +187,7 @@ def enregistrer_client():
 
 
 @app.route('/modifier_client/<int:client_id>', methods=['GET', 'POST'])
+@acces('admin')
 def modifier_client(client_id):
     champs_obligatoires = ('nom', 'prenom', 'adresse')
     with closing(get_db()) as conn:
@@ -181,6 +215,7 @@ def modifier_client(client_id):
 
 
 @app.post('/supprimer_client/<int:client_id>')
+@acces('admin')
 def supprimer_client(client_id):
     with closing(get_db()) as conn, conn:
         conn.execute('BEGIN IMMEDIATE')
@@ -196,6 +231,7 @@ def supprimer_client(client_id):
 
 
 @app.get('/commandes/')
+@acces('admin', 'user')
 def commandes():
     with closing(get_db()) as conn:
         lignes = conn.execute(
@@ -207,6 +243,7 @@ def commandes():
 
 
 @app.get('/statistiques/')
+@acces('admin', 'user')
 def statistiques():
     with closing(get_db()) as conn:
         lignes = conn.execute(
@@ -219,6 +256,7 @@ def statistiques():
 
 
 @app.post('/fiche_client/<int:client_id>/commandes')
+@acces('admin')
 def ajouter_commande(client_id):
     produit = request.form.get('produit', '').strip()
     try:
@@ -239,6 +277,69 @@ def ajouter_commande(client_id):
         if not cursor.rowcount:
             abort(404, description='Client introuvable')
     return redirect(url_for('Readfiche', post_id=client_id))
+
+
+@app.get('/api/clients')
+def api_liste_clients():
+    if not est_authentifie():
+        return jsonify(erreur='Authentification requise'), 401
+    motif = '%' + request.args.get('q', '').strip() + '%'
+    with closing(get_db()) as conn:
+        rows = conn.execute(
+            'SELECT * FROM clients WHERE nom LIKE ? OR prenom LIKE ? ORDER BY nom, id',
+            (motif, motif),
+        ).fetchall()
+    return jsonify([dict(row) for row in rows])
+
+
+@app.get('/api/clients/<int:client_id>')
+def api_un_client(client_id):
+    if not est_authentifie():
+        return jsonify(erreur='Authentification requise'), 401
+    with closing(get_db()) as conn:
+        row = conn.execute('SELECT * FROM clients WHERE id = ?', (client_id,)).fetchone()
+    if row is None:
+        return jsonify(erreur='Client introuvable'), 404
+    return jsonify(dict(row))
+
+
+@app.post('/api/clients')
+def api_creer_client():
+    if not a_le_role('admin'):
+        return jsonify(erreur='Authentification administrateur requise'), 401
+    data = request.get_json(silent=True)
+    champs = ('nom', 'prenom', 'adresse')
+    if not isinstance(data, dict) or not all(
+        isinstance(data.get(champ), str) and data[champ].strip() for champ in champs
+    ):
+        return jsonify(erreur='Les champs nom, prenom et adresse sont obligatoires'), 400
+    nom, prenom, adresse = (data[champ].strip() for champ in champs)
+    with closing(get_db()) as conn, conn:
+        row = conn.execute(
+            'INSERT INTO clients (nom, prenom, adresse) VALUES (?, ?, ?)', (nom, prenom, adresse),
+        )
+        client_id = row.lastrowid
+    return jsonify(id=client_id, nom=nom, prenom=prenom, adresse=adresse), 201
+
+
+@app.delete('/api/clients/<int:client_id>')
+def api_supprimer_client(client_id):
+    if not a_le_role('admin'):
+        return jsonify(erreur='Authentification administrateur requise'), 401
+    try:
+        with closing(get_db()) as conn, conn:
+            row = conn.execute('DELETE FROM clients WHERE id = ?', (client_id,))
+            if not row.rowcount:
+                return jsonify(erreur='Client introuvable'), 404
+    except sqlite3.IntegrityError:
+        return jsonify(erreur='Ce client a des commandes'), 409
+    return '', 204
+
+
+@app.get('/clients-api')
+@acces('admin', 'user')
+def clients_api():
+    return render_template('clients_api.html')
 
 
 # ---------------------------------------------------------------

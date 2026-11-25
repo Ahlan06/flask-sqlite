@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Recherche via l’API</title>
+</head>
+<body>
+    <h1>Recherche via l’API</h1>
+    <form id="recherche" action="{{ url_for('api_liste_clients') }}">
+        <label for="q">Nom ou prénom</label>
+        <input id="q" name="q">
+        <button>Rechercher</button>
+    </form>
+    <p id="statut" role="status"></p>
+    <ul id="clients"></ul>
+    <a href="{{ url_for('ReadBDD') }}">Retour à la consultation</a>
+    <script>
+        const formulaire = document.querySelector('#recherche');
+        const statut = document.querySelector('#statut');
+        const liste = document.querySelector('#clients');
+
+        async function charger() {
+            const url = new URL(formulaire.action);
+            url.search = new URLSearchParams(new FormData(formulaire));
+            try {
+                const reponse = await fetch(url);
+                if (!reponse.ok) throw new Error('Chargement impossible');
+                const clients = await reponse.json();
+                liste.replaceChildren(...clients.map(client => {
+                    const ligne = document.createElement('li');
+                    ligne.textContent = client.prenom + ' ' + client.nom;
+                    return ligne;
+                }));
+                statut.textContent = clients.length + ' résultat(s)';
+            } catch {
+                liste.replaceChildren();
+                statut.textContent = 'Impossible de charger les clients.';
+            }
+        }
+
+        formulaire.addEventListener('submit', evenement => {
+            evenement.preventDefault();
+            charger();
+        });
+        charger();
+    </script>
+</body>
+</html>

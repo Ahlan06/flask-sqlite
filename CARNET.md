@@ -190,23 +190,27 @@ SELECT COUNT(*) FROM clients WHERE adresse LIKE '%Paris%';
 
 1. Quelle est la différence entre **authentification** et **autorisation** ?
 
-   > _Ma réponse :_ 
+   > _Ma réponse :_ L’authentification vérifie mon identité. L’autorisation vérifie les actions que mon rôle permet.
 
 2. Où est stockée la session ? Comment le serveur sait-il qui vous êtes à chaque nouvelle requête ?
 
-   > _Ma réponse :_ 
+   > _Ma réponse :_ Flask stocke la session dans un cookie signé. Le navigateur le renvoie et Flask vérifie la signature avant de lire l’identifiant et le rôle.
 
 3. Pourquoi masquer un bouton dans le HTML ne suffit-il pas à protéger une action ?
 
-   > _Ma réponse :_ 
+   > _Ma réponse :_ Une personne peut ouvrir l’URL directement. La route doit vérifier le rôle avant d’exécuter l’action.
 
 4. Que signifient les codes `302` et `403` ? Dans quel cas votre application renvoie-t-elle chacun d'eux ?
 
-   > _Ma réponse :_ 
+   > _Ma réponse :_ Le code 302 redirige un visiteur vers la connexion. Le code 403 refuse une action à un utilisateur connecté dont le rôle ne suffit pas.
 
 5. Le mot de passe `password` est écrit en clair dans `flask_app.py`, sur un dépôt **public**. Quel est le risque ? Quelle solution avez-vous déjà rencontrée dans cet atelier pour cacher une information sensible ?
 
-   > _Ma réponse :_ 
+   > _Ma réponse :_ Un mot de passe écrit en clair dans GitHub est lisible par les visiteurs. Les secrets GitHub peuvent protéger les informations de déploiement. Les mots de passe des comptes sont stockés sous forme de hachage.
+
+### 🧩 Défi
+
+> Les comptes et leurs rôles sont dans la table `utilisateurs`. Werkzeug vérifie le mot de passe à partir du hachage.
 
 ---
 
@@ -214,19 +218,23 @@ SELECT COUNT(*) FROM clients WHERE adresse LIKE '%Paris%';
 
 1. Quelle est la différence entre une page HTML et une réponse JSON ? À qui chacune est-elle destinée ?
 
-   > _Ma réponse :_ 
+   > _Ma réponse :_ Le HTML est destiné à l’affichage dans le navigateur. Le JSON représente des données structurées qu’un programme peut lire.
 
 2. Que signifient les codes `200`, `201`, `400`, `401` et `404` renvoyés par votre API ?
 
-   > _Ma réponse :_ 
+   > _Ma réponse :_ 200 indique une lecture réussie, 201 une création, 400 une requête invalide, 401 une authentification requise et 404 une ressource introuvable.
 
 3. Pourquoi une API renvoie-t-elle une erreur JSON plutôt qu'une redirection vers la page de connexion ?
 
-   > _Ma réponse :_ 
+   > _Ma réponse :_ Le programme qui appelle une API doit pouvoir lire l’erreur et décider de la suite à partir du code et du JSON.
 
 4. Citez une application de votre téléphone qui, selon vous, utilise une API. Quelles données échange-t-elle ?
 
-   > _Ma réponse :_ 
+   > _Ma réponse :_ Une application météo envoie un lieu et reçoit des données telles que les températures et les prévisions.
+
+### 🧩 Défi
+
+> L’API permet la suppression par un administrateur et le filtrage avec `q`. La page de recherche appelle l’API sans recharger la page.
 
 ---
 
