@@ -1,4 +1,4 @@
-{% extends 'bibliotheque_base.html' %}
+{% extends 'base.html' %}
 {% block titre %}Emprunts en cours{% endblock %}
 {% block contenu %}
 <h1>{{ 'Emprunts en cours' if session.get('role') == 'admin' else 'Mes emprunts' }}</h1>

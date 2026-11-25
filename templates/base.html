@@ -22,11 +22,16 @@
     <nav aria-label="Navigation principale">
         <a href="{{ url_for('hello_world') }}">Accueil</a>
         <a href="{{ url_for('bibliotheque.livres') }}">Catalogue</a>
+        <a href="{{ url_for('ReadBDD') }}">Clients</a>
+        {% if session.get('role') %}
         <a href="{{ url_for('bibliotheque.mes_emprunts') }}">Emprunts</a>
         {% if session.get('role') == 'admin' %}
         <a href="{{ url_for('bibliotheque.utilisateurs') }}">Utilisateurs</a>
         {% endif %}
         <form method="post" action="{{ url_for('deconnexion') }}"><button>Se déconnecter</button></form>
+        {% else %}
+        <a href="{{ url_for('authentification') }}">Se connecter</a>
+        {% endif %}
     </nav>
     <main>{% block contenu %}{% endblock %}</main>
 </body>

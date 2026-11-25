@@ -1,56 +1,42 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <title>Clients</title>
-    <style>
-        table { border-collapse: collapse; }
-        th, td { border: 1px solid #ccc; padding: 6px 12px; }
-        th { background: #f0f0f0; }
-    </style>
-</head>
-<body>
-    <h1>Liste des Clients</h1>
-    <p><a href="{{ url_for('bibliotheque.livres') }}">Catalogue de la bibliothèque</a></p>
-    <form method="post" action="{{ url_for('deconnexion') }}">
-        <button type="submit">Se déconnecter</button>
-    </form>
-    <p><a href="{{ url_for('clients_api') }}">Rechercher via l’API</a></p>
-    {% if session.get('role') == 'admin' %}
-    <p><a href="{{ url_for('formulaire_client') }}">Enregistrer un client</a></p>
-    {% endif %}
-    <p><a href="/recherche">Rechercher un client</a></p>
-    <p><a href="{{ url_for('commandes') }}">Commandes</a> · <a href="{{ url_for('statistiques') }}">Statistiques</a></p>
-    <p>{{ data|length }} client(s) dans la base.</p>
-    <table>
-        <tr>
-            <th>ID</th>
-            <th>Création</th>
-            <th>Nom</th>
-            <th>Prénom</th>
-            <th>Adresse</th>
-            <th>Téléphone</th>
-            {% if session.get('role') == 'admin' %}<th>Actions</th>{% endif %}
-        </tr>
-        {% for row in data %}
-        <tr>
-            <td>{{ row['id'] }}</td>
-            <td>{{ row['created'] }}</td>
-            <td><a href="/fiche_client/{{ row['id'] }}">{{ row['nom'] }}</a></td>
-            <td>{{ row['prenom'] }}</td>
-            <td>{{ row['adresse'] }}</td>
-            <td>{{ row['telephone'] or '-' }}</td>
-            {% if session.get('role') == 'admin' %}
-            <td>
-                <a href="{{ url_for('modifier_client', client_id=row['id']) }}">Modifier</a>
-                <form action="{{ url_for('supprimer_client', client_id=row['id']) }}" method="post"
-                      onsubmit="return confirm('Supprimer ce client ?');">
-                    <button type="submit">Supprimer</button>
-                </form>
-            </td>
-            {% endif %}
-        </tr>
-        {% endfor %}
-    </table>
-</body>
-</html>
+{% extends 'base.html' %}
+{% block titre %}Clients{% endblock %}
+{% block contenu %}
+<h1>Liste des Clients</h1>
+<p><a href="{{ url_for('clients_api') }}">Rechercher via l’API</a></p>
+{% if session.get('role') == 'admin' %}
+<p><a href="{{ url_for('formulaire_client') }}">Enregistrer un client</a></p>
+{% endif %}
+<p><a href="/recherche">Rechercher un client</a></p>
+<p><a href="{{ url_for('commandes') }}">Commandes</a> · <a href="{{ url_for('statistiques') }}">Statistiques</a></p>
+<p>{{ data|length }} client(s) dans la base.</p>
+<div class="tableau"><table>
+    <tr>
+        <th>ID</th>
+        <th>Création</th>
+        <th>Nom</th>
+        <th>Prénom</th>
+        <th>Adresse</th>
+        <th>Téléphone</th>
+        {% if session.get('role') == 'admin' %}<th>Actions</th>{% endif %}
+    </tr>
+    {% for row in data %}
+    <tr>
+        <td>{{ row['id'] }}</td>
+        <td>{{ row['created'] }}</td>
+        <td><a href="/fiche_client/{{ row['id'] }}">{{ row['nom'] }}</a></td>
+        <td>{{ row['prenom'] }}</td>
+        <td>{{ row['adresse'] }}</td>
+        <td>{{ row['telephone'] or '-' }}</td>
+        {% if session.get('role') == 'admin' %}
+        <td>
+            <a href="{{ url_for('modifier_client', client_id=row['id']) }}">Modifier</a>
+            <form action="{{ url_for('supprimer_client', client_id=row['id']) }}" method="post"
+                  onsubmit="return confirm('Supprimer ce client ?');">
+                <button type="submit">Supprimer</button>
+            </form>
+        </td>
+        {% endif %}
+    </tr>
+    {% endfor %}
+</table></div>
+{% endblock %}

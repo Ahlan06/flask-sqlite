@@ -1,0 +1,6 @@
+{% extends 'base.html' %}
+{% block titre %}Erreur {{ erreur.code }}{% endblock %}
+{% block contenu %}
+<h1>{{ {400: 'Saisie invalide', 403: 'Accès refusé', 404: 'Page introuvable', 409: 'Action impossible'}[erreur.code] }}</h1>
+<p>{{ 'Cette page est réservée aux administrateurs.' if erreur.code == 403 else erreur.description }}</p>
+{% endblock %}

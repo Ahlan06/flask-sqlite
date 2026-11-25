@@ -22,7 +22,8 @@ CREATE TABLE IF NOT EXISTS utilisateurs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     login TEXT NOT NULL UNIQUE,
     mot_de_passe_hash TEXT NOT NULL,
-    role TEXT NOT NULL CHECK (role IN ('admin', 'user'))
+    role TEXT NOT NULL CHECK (role IN ('admin', 'user')),
+    actif INTEGER NOT NULL DEFAULT 1 CHECK (actif IN (0, 1))
 );
 CREATE TABLE IF NOT EXISTS configuration (
     nom TEXT PRIMARY KEY,
@@ -43,7 +44,8 @@ CREATE TABLE IF NOT EXISTS livres (
     isbn TEXT,
     annee INTEGER,
     genre TEXT,
-    nb_exemplaires INTEGER NOT NULL CHECK (nb_exemplaires >= 0)
+    nb_exemplaires INTEGER NOT NULL CHECK (nb_exemplaires >= 0),
+    actif INTEGER NOT NULL DEFAULT 1 CHECK (actif IN (0, 1))
 );
 CREATE TABLE IF NOT EXISTS emprunts (
     id INTEGER PRIMARY KEY AUTOINCREMENT,

@@ -1,25 +1,20 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <title>Statistiques des commandes</title>
-</head>
-<body>
-    <h1>Statistiques des commandes</h1>
-    <p><a href="{{ url_for('ReadBDD') }}">Clients</a> · <a href="{{ url_for('commandes') }}">Commandes</a></p>
-    <table>
-        <thead><tr><th>Client</th><th>Nombre de commandes</th><th>Total</th></tr></thead>
-        <tbody>
-        {% for client in clients %}
-            <tr>
-                <td><a href="{{ url_for('Readfiche', post_id=client['id']) }}">{{ client['prenom'] }} {{ client['nom'] }}</a></td>
-                <td>{{ client['nombre'] }}</td>
-                <td>{{ '%.2f'|format(client['total']) }} €</td>
-            </tr>
-        {% else %}
-            <tr><td colspan="3">Aucun client.</td></tr>
-        {% endfor %}
-        </tbody>
-    </table>
-</body>
-</html>
+{% extends 'base.html' %}
+{% block titre %}Statistiques des commandes{% endblock %}
+{% block contenu %}
+<h1>Statistiques des commandes</h1>
+<p><a href="{{ url_for('ReadBDD') }}">Clients</a> · <a href="{{ url_for('commandes') }}">Commandes</a></p>
+<div class="tableau"><table>
+    <thead><tr><th>Client</th><th>Nombre de commandes</th><th>Total</th></tr></thead>
+    <tbody>
+    {% for client in clients %}
+        <tr>
+            <td><a href="{{ url_for('Readfiche', post_id=client['id']) }}">{{ client['prenom'] }} {{ client['nom'] }}</a></td>
+            <td>{{ client['nombre'] }}</td>
+            <td>{{ '%.2f'|format(client['total']) }} €</td>
+        </tr>
+    {% else %}
+        <tr><td colspan="3">Aucun client.</td></tr>
+    {% endfor %}
+    </tbody>
+</table></div>
+{% endblock %}

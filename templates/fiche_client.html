@@ -1,31 +1,26 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <title>{{ client['prenom'] }} {{ client['nom'] }}</title>
-</head>
-<body>
-    <h1>{{ client['prenom'] }} {{ client['nom'] }}</h1>
-    <p><strong>ID :</strong> {{ client['id'] }}</p>
-    <p><strong>Création :</strong> {{ client['created'] }}</p>
-    <p><strong>Adresse :</strong> {{ client['adresse'] }}</p>
-    <h2>Commandes</h2>
-    <ul>
-    {% for commande in commandes %}
-        <li>{{ commande['produit'] }} — {{ '%.2f'|format(commande['montant']) }} €</li>
-    {% else %}
-        <li>Aucune commande.</li>
-    {% endfor %}
-    </ul>
-    {% if session.get('role') == 'admin' %}
-    <form method="post" action="{{ url_for('ajouter_commande', client_id=client['id']) }}">
-        <label for="produit">Produit</label>
-        <input id="produit" name="produit" required>
-        <label for="montant">Montant (€)</label>
-        <input id="montant" name="montant" type="number" min="0" step="0.01" required>
-        <button type="submit">Ajouter la commande</button>
-    </form>
-    {% endif %}
-    <p><a href="/consultation/">Retour à la liste des clients</a></p>
-</body>
-</html>
+{% extends 'base.html' %}
+{% block titre %}{{ client['prenom'] }} {{ client['nom'] }}{% endblock %}
+{% block contenu %}
+<h1>{{ client['prenom'] }} {{ client['nom'] }}</h1>
+<p><strong>ID :</strong> {{ client['id'] }}</p>
+<p><strong>Création :</strong> {{ client['created'] }}</p>
+<p><strong>Adresse :</strong> {{ client['adresse'] }}</p>
+<h2>Commandes</h2>
+<ul>
+{% for commande in commandes %}
+    <li>{{ commande['produit'] }} — {{ '%.2f'|format(commande['montant']) }} €</li>
+{% else %}
+    <li>Aucune commande.</li>
+{% endfor %}
+</ul>
+{% if session.get('role') == 'admin' %}
+<form method="post" action="{{ url_for('ajouter_commande', client_id=client['id']) }}">
+    <label for="produit">Produit</label>
+    <input id="produit" name="produit" required>
+    <label for="montant">Montant (€)</label>
+    <input id="montant" name="montant" type="number" min="0" step="0.01" required>
+    <button type="submit">Ajouter la commande</button>
+</form>
+{% endif %}
+<p><a href="/consultation/">Retour à la liste des clients</a></p>
+{% endblock %}

@@ -46,6 +46,12 @@ def initialiser_application():
             for fichier in ('002_ajout_commandes.sql', '003_ajout_utilisateurs.sql', '004_ajout_bibliotheque.sql'):
                 migration = Path(BASE_DIR, 'migrations', fichier)
                 conn.executescript(migration.read_text(encoding='utf-8'))
+            with conn:
+                conn.execute('BEGIN IMMEDIATE')
+                for table in ('livres', 'utilisateurs'):
+                    colonnes = conn.execute(f'PRAGMA table_info({table})').fetchall()
+                    if not any(colonne['name'] == 'actif' for colonne in colonnes):
+                        conn.execute(f'ALTER TABLE {table} ADD COLUMN actif INTEGER NOT NULL DEFAULT 1 CHECK (actif IN (0, 1))')
             app.secret_key = conn.execute(
                 "SELECT valeur FROM configuration WHERE nom = 'secret_session'"
             ).fetchone()[0]
@@ -62,7 +68,7 @@ def a_le_role(*roles):
     if session.get('role') not in roles:
         return False
     with closing(get_db()) as conn:
-        compte = conn.execute('SELECT role FROM utilisateurs WHERE id = ?', (session.get('utilisateur_id'),)).fetchone()
+        compte = conn.execute('SELECT role FROM utilisateurs WHERE id = ? AND actif = 1', (session.get('utilisateur_id'),)).fetchone()
     return compte is not None and compte['role'] == session.get('role')
 
 
@@ -71,6 +77,10 @@ def acces(*roles):
         @wraps(route)
         def verifier(*args, **kwargs):
             if not est_authentifie():
+                if request.method == 'GET':
+                    destination = request.full_path.removesuffix('?')
+                    if not destination.startswith('//') and chr(92) not in destination:
+                        session['destination'] = destination
                 return redirect(url_for('authentification'))
             if not a_le_role(*roles):
                 abort(403)
@@ -79,19 +89,25 @@ def acces(*roles):
     return decorateur
 
 
+@app.errorhandler(400)
+@app.errorhandler(403)
+@app.errorhandler(404)
+@app.errorhandler(409)
+def afficher_erreur(erreur):
+    if request.path.startswith('/api/'):
+        return jsonify(erreur=erreur.description), erreur.code
+    return render_template('erreur.html', erreur=erreur), erreur.code
+
+
 @app.route('/')
 def hello_world():
     return render_template('hello.html')
 
 
 @app.route('/lecture')
+@acces('admin', 'user')
 def lecture():
-    if not est_authentifie():
-        # Rediriger vers la page d'authentification si l'utilisateur n'est pas authentifié
-        return redirect(url_for('authentification'))
-
-    # Si l'utilisateur est authentifié
-    return "<h2>Bravo, vous êtes authentifié</h2>"
+    return render_template('lecture.html')
 
 
 @app.route('/authentification', methods=['GET', 'POST'])
@@ -99,11 +115,12 @@ def authentification():
     if request.method == 'POST':
         login = request.form.get('username', '').strip()
         with closing(get_db()) as conn:
-            compte = conn.execute('SELECT * FROM utilisateurs WHERE login = ?', (login,)).fetchone()
+            compte = conn.execute('SELECT * FROM utilisateurs WHERE login = ? AND actif = 1', (login,)).fetchone()
         if compte and check_password_hash(compte['mot_de_passe_hash'], request.form.get('password', '')):
+            destination = session.get('destination') or url_for('ReadBDD')
             session.clear()
             session.update(utilisateur_id=compte['id'], role=compte['role'])
-            return redirect(url_for('ReadBDD'))
+            return redirect(destination)
         return render_template('formulaire_authentification.html', error=True), 401
 
     return render_template('formulaire_authentification.html', error=False)
@@ -121,7 +138,7 @@ def Readfiche(post_id):
     with closing(get_db()) as conn:
         client = conn.execute('SELECT * FROM clients WHERE id = ?', (post_id,)).fetchone()
         if client is None:
-            return "<h2>Client introuvable</h2>", 404
+            abort(404, description='Client introuvable')
         commandes = conn.execute(
             'SELECT * FROM commandes WHERE client_id = ? ORDER BY id DESC', (post_id,),
         ).fetchall()

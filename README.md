@@ -27,7 +27,7 @@ Le catalogue permet la recherche par titre ou auteur et calcule les exemplaires 
 | `GET /emprunts` | Voir ses prêts ou tous les prêts en tant qu’admin |
 | `POST /emprunts/<id>/rendre` | Enregistrer le retour par le titulaire ou un admin |
 | `GET/POST /admin/livres/nouveau`, `GET/POST /admin/livres/<id>/modifier` | Créer ou modifier un livre en tant qu’admin |
-| `POST /admin/livres/<id>/supprimer` | Supprimer un livre sans historique en tant qu’admin |
+| `POST /admin/livres/<id>/supprimer` | Retirer un livre sans emprunt en cours en tant qu’admin |
 | `GET/POST /admin/utilisateurs`, `POST /admin/utilisateurs/<id>/supprimer` | Gérer les comptes en tant qu’admin |
 | `GET /api/livres`, `GET /api/livres/<id>` | Lire le catalogue et la disponibilité en JSON |
 | `GET/POST /api/clients`, `GET/DELETE /api/clients/<id>` | Lire les clients connecté. La création et la suppression sont réservées aux admins |

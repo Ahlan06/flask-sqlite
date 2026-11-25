@@ -19,7 +19,7 @@ def creer_bibliotheque(get_db, acces, est_authentifie):
         motif = '%' + q + '%'
         with closing(get_db()) as conn:
             return conn.execute(
-                CATALOGUE + ' WHERE titre LIKE ? OR auteur LIKE ? GROUP BY livres.id ORDER BY titre, livres.id',
+                CATALOGUE + ' WHERE livres.actif = 1 AND (titre LIKE ? OR auteur LIKE ?) GROUP BY livres.id ORDER BY titre, livres.id',
                 (motif, motif),
             ).fetchall()
 
@@ -38,7 +38,7 @@ def creer_bibliotheque(get_db, acces, est_authentifie):
                 conn.execute('BEGIN IMMEDIATE')
             livre = {}
             if livre_id is not None:
-                ligne = conn.execute(CATALOGUE + ' WHERE livres.id = ? GROUP BY livres.id', (livre_id,)).fetchone()
+                ligne = conn.execute(CATALOGUE + ' WHERE livres.id = ? AND livres.actif = 1 GROUP BY livres.id', (livre_id,)).fetchone()
                 if ligne is None:
                     abort(404, description='Livre introuvable.')
                 livre = dict(ligne)
@@ -74,13 +74,18 @@ def creer_bibliotheque(get_db, acces, est_authentifie):
     @bp.post('/admin/livres/<int:livre_id>/supprimer')
     @acces('admin')
     def supprimer_livre(livre_id):
-        try:
-            with closing(get_db()) as conn, conn:
-                resultat = conn.execute('DELETE FROM livres WHERE id = ?', (livre_id,))
-                if not resultat.rowcount:
-                    abort(404, description='Livre introuvable.')
-        except sqlite3.IntegrityError:
-            abort(409, description='Ce livre figure dans des emprunts. Sa fiche est conservée pour garder l’historique.')
+        with closing(get_db()) as conn, conn:
+            conn.execute('BEGIN IMMEDIATE')
+            livre = conn.execute(CATALOGUE + ' WHERE livres.id = ? AND livres.actif = 1 GROUP BY livres.id', (livre_id,)).fetchone()
+            if livre is None:
+                abort(404, description='Livre introuvable.')
+            if livre['nb_exemplaires'] != livre['nb_disponibles']:
+                abort(409, description='Ce livre a des exemplaires en cours d’emprunt.')
+            historique = conn.execute('SELECT 1 FROM emprunts WHERE livre_id = ? LIMIT 1', (livre_id,)).fetchone()
+            if historique:
+                conn.execute('UPDATE livres SET actif = 0 WHERE id = ?', (livre_id,))
+            else:
+                conn.execute('DELETE FROM livres WHERE id = ?', (livre_id,))
         return redirect(url_for('.livres'))
 
     @bp.post('/livres/<int:livre_id>/emprunter')
@@ -89,7 +94,7 @@ def creer_bibliotheque(get_db, acces, est_authentifie):
         utilisateur_id = session['utilisateur_id']
         with closing(get_db()) as conn, conn:
             conn.execute('BEGIN IMMEDIATE')
-            livre = conn.execute(CATALOGUE + ' WHERE livres.id = ? GROUP BY livres.id', (livre_id,)).fetchone()
+            livre = conn.execute(CATALOGUE + ' WHERE livres.id = ? AND livres.actif = 1 GROUP BY livres.id', (livre_id,)).fetchone()
             if livre is None:
                 abort(404, description='Livre introuvable.')
             if livre['nb_disponibles'] <= 0:
@@ -151,7 +156,7 @@ def creer_bibliotheque(get_db, acces, est_authentifie):
                 except sqlite3.IntegrityError:
                     abort(409, description='Cet identifiant existe déjà.')
                 return redirect(url_for('.utilisateurs'))
-            lignes = conn.execute('SELECT id, login, role FROM utilisateurs ORDER BY login').fetchall()
+            lignes = conn.execute('SELECT id, login, role FROM utilisateurs WHERE actif = 1 ORDER BY login').fetchall()
         return render_template('utilisateurs.html', utilisateurs=lignes)
 
     @bp.post('/admin/utilisateurs/<int:utilisateur_id>/supprimer')
@@ -159,13 +164,18 @@ def creer_bibliotheque(get_db, acces, est_authentifie):
     def supprimer_utilisateur(utilisateur_id):
         if utilisateur_id == session['utilisateur_id']:
             abort(409, description='Vous utilisez actuellement ce compte.')
-        try:
-            with closing(get_db()) as conn, conn:
-                resultat = conn.execute('DELETE FROM utilisateurs WHERE id = ?', (utilisateur_id,))
-                if not resultat.rowcount:
-                    abort(404, description='Compte introuvable.')
-        except sqlite3.IntegrityError:
-            abort(409, description='Ce compte figure dans l’historique des emprunts.')
+        with closing(get_db()) as conn, conn:
+            conn.execute('BEGIN IMMEDIATE')
+            compte = conn.execute('SELECT 1 FROM utilisateurs WHERE id = ? AND actif = 1', (utilisateur_id,)).fetchone()
+            if compte is None:
+                abort(404, description='Compte introuvable.')
+            emprunts = conn.execute('SELECT date_retour FROM emprunts WHERE utilisateur_id = ?', (utilisateur_id,)).fetchall()
+            if any(emprunt['date_retour'] is None for emprunt in emprunts):
+                abort(409, description='Ce compte a des emprunts en cours.')
+            if emprunts:
+                conn.execute('UPDATE utilisateurs SET actif = 0 WHERE id = ?', (utilisateur_id,))
+            else:
+                conn.execute('DELETE FROM utilisateurs WHERE id = ?', (utilisateur_id,))
         return redirect(url_for('.utilisateurs'))
 
     @bp.get('/api/livres')
@@ -179,7 +189,7 @@ def creer_bibliotheque(get_db, acces, est_authentifie):
         if not est_authentifie():
             return jsonify(erreur='Authentification requise'), 401
         with closing(get_db()) as conn:
-            livre = conn.execute(CATALOGUE + ' WHERE livres.id = ? GROUP BY livres.id', (livre_id,)).fetchone()
+            livre = conn.execute(CATALOGUE + ' WHERE livres.id = ? AND livres.actif = 1 GROUP BY livres.id', (livre_id,)).fetchone()
         if livre is None:
             return jsonify(erreur='Livre introuvable'), 404
         return jsonify(dict(livre))
