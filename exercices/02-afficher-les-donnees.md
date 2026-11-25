@@ -1,6 +1,6 @@
 # 🟢 Exercice 2 — Afficher les données proprement
 
-⏱️ ~20 minutes · [⬅️ Exercice précédent](01-explorer-la-base.md) · [Exercice suivant ➡️](03-rechercher.md)
+⏱️ ~20 minutes · [⬅️ Retour au sommaire](../README.md#-séquence-5--les-exercices) · [Exercice précédent](01-explorer-la-base.md) · [Exercice suivant ➡️](03-rechercher.md)
 
 ## 🎯 Ce que vous allez découvrir
 
@@ -24,9 +24,8 @@ Vous allez comprendre ce circuit et rendre l'affichage **plus lisible et plus ro
 
 ### Partie A — Lire le code
 
-Ouvrez `flask_app.py` et repérez la fonction `ReadBDD()`. Identifiez les 5 étapes : **se connecter**, **créer un curseur**, **exécuter la requête**, **récupérer les résultats** (`fetchall`), **fermer la connexion**.
-
-Ouvrez ensuite `templates/read_data.html` : la boucle `{% for row in data %}` parcourt les lignes, et `row[2]` désigne… la 3ᵉ colonne. Pas très parlant !
+1. Dans `flask_app.py`, repérez la fonction `ReadBDD()` et identifiez les 5 étapes : **se connecter**, **créer un curseur**, **exécuter la requête**, **récupérer les résultats** (`fetchall`), **fermer la connexion**.
+2. Dans `templates/read_data.html`, repérez la boucle `{% for row in data %}` qui parcourt les lignes. `row[2]` désigne la 3ᵉ colonne : ce n'est pas très parlant !
 
 ### Partie B — Accéder aux colonnes par leur nom
 
