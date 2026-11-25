@@ -50,19 +50,19 @@
 
 1. Décrivez avec vos mots le trajet d'une requête, du navigateur jusqu'à la base de données, puis le retour.
 
-   > _Ma réponse :_ 
+   > _Ma réponse :_ Le navigateur envoie une requête à Flask. La route correspondante interroge SQLite, récupère les lignes, puis Flask les insère dans le template avec Jinja. Le navigateur reçoit et affiche le HTML généré, pas le SQL ni le code Python.
 
 2. Pourquoi faut-il **fermer** la connexion (`conn.close()`) après chaque requête ?
 
-   > _Ma réponse :_ 
+   > _Ma réponse :_ Pour libérer les ressources utilisées par la connexion et éviter de garder inutilement la base ouverte, ce qui pourrait finir par gêner d'autres opérations.
 
 3. Quel est l'avantage d'écrire `row['nom']` plutôt que `row[2]` ? (Pensez à ce qui arriverait si on ajoutait une colonne au milieu de la table.)
 
-   > _Ma réponse :_ 
+   > _Ma réponse :_ Le nom de colonne indique clairement quelle donnée on lit. Si une colonne est ajoutée ou si l'ordre change, `row['nom']` continue de désigner le nom, tandis que `row[2]` pourrait désigner une autre donnée.
 
 4. Pourquoi est-il préférable de trier avec `ORDER BY` dans la requête SQL plutôt qu'en Python ?
 
-   > _Ma réponse :_ 
+   > _Ma réponse :_ SQLite peut trier les données directement avant de les renvoyer. C'est plus efficace pour de grandes tables et évite de refaire le tri côté Python après avoir récupéré toutes les lignes.
 
 ---
 
