@@ -17,23 +17,32 @@
 
 1. Expliquez avec vos mots la différence entre une **table**, une **colonne** et une **ligne**.
 
-   > _Ma réponse :_ 
+   > _Ma réponse :_ Une table rassemble les données du même type, ici les clients. Une colonne représente une catégorie d'information, comme `nom` ou `adresse`. Une ligne représente un client précis et contient une valeur pour chacune des colonnes.
 
 2. À quoi sert la clé primaire `id` ? Pourquoi ne pas simplement identifier un client par son nom ?
 
-   > _Ma réponse :_ 
+   > _Ma réponse :_ La clé primaire `id` identifie chaque ligne de manière unique. Plusieurs clients peuvent avoir le même nom ou prénom, et un nom peut changer : il ne permet donc pas un identifiant fiable.
 
 3. Pourquoi votre client ajouté en console est-il apparu sur le site ?
 
-   > _Ma réponse :_ 
+   > _Ma réponse :_ La console SQLite et le site utilisent le même fichier `database.db`. La route `/consultation/` relit cette base à chaque affichage, donc l'insertion effectuée en console est immédiatement visible sans modifier GitHub.
 
 4. Que signifie `NOT NULL` dans `schema.sql` ? Quelle erreur avez-vous obtenue avec `INSERT INTO clients (nom) VALUES ('TEST');` ?
 
-   > _Ma réponse :_ 
+   > _Ma réponse :_ `NOT NULL` signifie que la colonne doit obligatoirement recevoir une valeur. L'insertion de `TEST` échoue car `prenom` et/ou `adresse` sont obligatoires : SQLite renvoie une erreur de contrainte du type `NOT NULL constraint failed`.
 
 🧩 **Défi** — mes requêtes / ma solution :
 
-   > 
+   > ```sql
+   -- Les 3 derniers clients enregistrés
+   SELECT * FROM clients ORDER BY id DESC LIMIT 3;
+
+   -- Les clients dont le prénom commence par la lettre A
+   SELECT * FROM clients WHERE prenom LIKE 'A%';
+
+   -- Le nombre de clients qui habitent à Paris
+   SELECT COUNT(*) FROM clients WHERE adresse LIKE '%Paris%';
+   ```
 
 ---
 
