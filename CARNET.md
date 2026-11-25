@@ -31,18 +31,18 @@
 
    > _Ma réponse :_ `NOT NULL` signifie que la colonne doit obligatoirement recevoir une valeur. L'insertion de `TEST` échoue car `prenom` et/ou `adresse` sont obligatoires : SQLite renvoie une erreur de contrainte du type `NOT NULL constraint failed`.
 
-🧩 **Défi** — mes requêtes / ma solution :
+### 🧩 Défi
 
-   > ```sql
-   -- Les 3 derniers clients enregistrés
-   SELECT * FROM clients ORDER BY id DESC LIMIT 3;
+```sql
+-- Les 3 derniers clients enregistrés
+SELECT * FROM clients ORDER BY id DESC LIMIT 3;
 
-   -- Les clients dont le prénom commence par la lettre A
-   SELECT * FROM clients WHERE prenom LIKE 'A%';
+-- Les clients dont le prénom commence par la lettre A
+SELECT * FROM clients WHERE prenom LIKE 'A%';
 
-   -- Le nombre de clients qui habitent à Paris
-   SELECT COUNT(*) FROM clients WHERE adresse LIKE '%Paris%';
-   ```
+-- Le nombre de clients qui habitent à Paris
+SELECT COUNT(*) FROM clients WHERE adresse LIKE '%Paris%';
+```
 
 ---
 
@@ -84,9 +84,9 @@
 
    > _Ma réponse :_ La recherche et le tri apparaissent dans l’URL. On peut mettre le résultat en favori ou partager le lien.
 
-🧩 **Défi** — mes requêtes / ma solution :
+### 🧩 Défi
 
-   > Le menu propose trois tris. Python associe chaque choix à un ordre SQL prédéfini et utilise le tri par nom si le choix est inconnu.
+> Le menu propose trois tris. Python associe chaque choix à un ordre SQL prédéfini et utilise le tri par nom si le choix est inconnu.
 
 ---
 
@@ -108,7 +108,9 @@
 
    > _Ma réponse :_ La redirection transforme l’affichage suivant en requête GET. Actualiser la page recharge la liste ou la fiche sans renvoyer le formulaire.
 
-🧩 **Défi** — Après l’insertion, je récupère `cursor.lastrowid` pour rediriger vers la fiche du nouveau client.
+### 🧩 Défi
+
+> Après l’insertion, je récupère `cursor.lastrowid` pour rediriger vers la fiche du nouveau client.
 
 ---
 
@@ -130,7 +132,9 @@
 
    > _Ma réponse :_ Des liens ou des données liées peuvent encore faire référence à l’ancien identifiant. Le réutiliser pointerait alors vers un autre client.
 
-🧩 **Défi** — La suppression logique permet de restaurer un client, de garder son historique et de conserver ses liens avec d’autres données. Les listes courantes filtrent les clients actifs.
+### 🧩 Défi
+
+> La suppression logique permet de restaurer un client, de garder son historique et de conserver ses liens avec d’autres données. Les listes courantes filtrent les clients actifs.
 
 ---
 
@@ -152,7 +156,9 @@
 
    > _Ma réponse :_ Cinq fichiers servent à la modification : `schema.sql`, `flask_app.py`, `formulaire.html`, `modifier_client.html` et `read_data.html`. La migration ajoute un sixième fichier.
 
-🧩 **Défi** — Le fichier `migrations/001_ajout_telephone.sql` conserve la commande exacte à appliquer. Les numéros indiquent l’ordre des changements pour faire évoluer la base de la même façon sur chaque serveur.
+### 🧩 Défi
+
+> Le fichier `migrations/001_ajout_telephone.sql` conserve la commande exacte à appliquer. Les numéros indiquent l’ordre des changements pour faire évoluer la base de la même façon sur chaque serveur.
 
 ---
 
