@@ -12,6 +12,8 @@
 import os
 import sqlite3
 from contextlib import closing
+from decimal import Decimal, InvalidOperation
+from pathlib import Path
 
 from flask import Flask, render_template, request, redirect, url_for, session, abort
 
@@ -28,8 +30,20 @@ DATABASE = os.path.join(BASE_DIR, 'database.db')
 def get_db():
     """Ouvre une connexion à la base de données SQLite."""
     conn = sqlite3.connect(DATABASE)
+    conn.execute('PRAGMA foreign_keys = ON')
     conn.row_factory = sqlite3.Row
     return conn
+
+
+def installer_table_commandes():
+    """Ajoute la table à une base existante lors du chargement de l’application."""
+    if Path(DATABASE).is_file():
+        migration = Path(BASE_DIR, 'migrations', '002_ajout_commandes.sql')
+        with closing(get_db()) as conn:
+            conn.executescript(migration.read_text(encoding='utf-8'))
+
+
+installer_table_commandes()
 
 
 # Fonction pour savoir si l'utilisateur s'est authentifié
@@ -69,14 +83,15 @@ def authentification():
 
 @app.route('/fiche_client/<int:post_id>')
 def Readfiche(post_id):
-    conn = get_db()
-    cursor = conn.cursor()
-    cursor.execute('SELECT * FROM clients WHERE id = ?', (post_id,))
-    data = cursor.fetchone()
-    conn.close()
-    if not data:
-        return "<h2>Client introuvable</h2>", 404
-    return render_template('fiche_client.html', client=data)
+    with closing(get_db()) as conn:
+        client = conn.execute('SELECT * FROM clients WHERE id = ?', (post_id,)).fetchone()
+        if client is None:
+            return "<h2>Client introuvable</h2>", 404
+        commandes = conn.execute(
+            'SELECT * FROM commandes WHERE client_id = ? ORDER BY id DESC', (post_id,),
+        ).fetchall()
+    return render_template('fiche_client.html', client=client, commandes=commandes)
+
 
 
 @app.route('/consultation/')
@@ -168,10 +183,62 @@ def modifier_client(client_id):
 @app.post('/supprimer_client/<int:client_id>')
 def supprimer_client(client_id):
     with closing(get_db()) as conn, conn:
+        conn.execute('BEGIN IMMEDIATE')
+        nombre = conn.execute(
+            'SELECT COUNT(*) FROM commandes WHERE client_id = ?', (client_id,),
+        ).fetchone()[0]
+        if nombre:
+            return render_template('suppression_refusee.html', nombre=nombre, client_id=client_id), 409
         resultat = conn.execute('DELETE FROM clients WHERE id = ?', (client_id,))
         if not resultat.rowcount:
             abort(404, description='Client introuvable')
     return redirect(url_for('ReadBDD'))
+
+
+@app.get('/commandes/')
+def commandes():
+    with closing(get_db()) as conn:
+        lignes = conn.execute(
+            """SELECT commandes.*, clients.nom, clients.prenom
+               FROM commandes JOIN clients ON commandes.client_id = clients.id
+               ORDER BY commandes.id DESC"""
+        ).fetchall()
+    return render_template('commandes.html', commandes=lignes)
+
+
+@app.get('/statistiques/')
+def statistiques():
+    with closing(get_db()) as conn:
+        lignes = conn.execute(
+            """SELECT clients.id, clients.nom, clients.prenom, COUNT(commandes.id) AS nombre,
+                      COALESCE(SUM(commandes.montant), 0) AS total
+               FROM clients LEFT JOIN commandes ON commandes.client_id = clients.id
+               GROUP BY clients.id ORDER BY total DESC, clients.nom, clients.id"""
+        ).fetchall()
+    return render_template('statistiques.html', clients=lignes)
+
+
+@app.post('/fiche_client/<int:client_id>/commandes')
+def ajouter_commande(client_id):
+    produit = request.form.get('produit', '').strip()
+    try:
+        montant = Decimal(request.form.get('montant', '').strip().replace(',', '.'))
+    except InvalidOperation:
+        abort(400, description='Indiquez un montant valide.')
+    if not produit or not montant.is_finite() or not 0 <= montant <= Decimal('999999999.99'):
+        abort(400, description='Indiquez un produit et un montant valide.')
+    if montant != montant.quantize(Decimal('0.01')):
+        abort(400, description='Le montant doit avoir au maximum deux décimales.')
+
+    with closing(get_db()) as conn, conn:
+        cursor = conn.execute(
+            """INSERT INTO commandes (client_id, produit, montant)
+               SELECT id, ?, ? FROM clients WHERE id = ?""",
+            (produit, float(montant), client_id),
+        )
+        if not cursor.rowcount:
+            abort(404, description='Client introuvable')
+    return redirect(url_for('Readfiche', post_id=client_id))
 
 
 # ---------------------------------------------------------------

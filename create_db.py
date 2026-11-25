@@ -31,6 +31,12 @@ cur.execute("INSERT INTO clients (nom, prenom, adresse) VALUES (?, ?, ?)", ('GAG
 cur.execute("INSERT INTO clients (nom, prenom, adresse) VALUES (?, ?, ?)", ('DUBOIS', 'Charlotte', '789, Rue des Roses, 13005 Marseille'))
 cur.execute("INSERT INTO clients (nom, prenom, adresse) VALUES (?, ?, ?)", ('LEFEVRE', 'Thomas', '333, Rue de la Paix, 75002 Paris'))
 
+cur.executemany(
+    'INSERT INTO commandes (client_id, produit, montant) VALUES (?, ?, ?)',
+    [(2, 'Clavier', 49.90), (2, 'Souris', 19.90), (3, 'Écran', 189.00),
+     (5, 'Casque', 79.00), (5, 'Webcam', 59.00), (5, 'Câble HDMI', 9.90)],
+)
+
 connection.commit()
 connection.close()
 

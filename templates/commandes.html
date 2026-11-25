@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Commandes</title>
+</head>
+<body>
+    <h1>Commandes</h1>
+    <p><a href="{{ url_for('ReadBDD') }}">Clients</a> · <a href="{{ url_for('statistiques') }}">Statistiques</a></p>
+    <table>
+        <thead><tr><th>Client</th><th>Produit</th><th>Montant</th><th>Date</th></tr></thead>
+        <tbody>
+        {% for commande in commandes %}
+            <tr>
+                <td><a href="{{ url_for('Readfiche', post_id=commande['client_id']) }}">{{ commande['prenom'] }} {{ commande['nom'] }}</a></td>
+                <td>{{ commande['produit'] }}</td>
+                <td>{{ '%.2f'|format(commande['montant']) }} €</td>
+                <td>{{ commande['date_commande'] }}</td>
+            </tr>
+        {% else %}
+            <tr><td colspan="4">Aucune commande.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

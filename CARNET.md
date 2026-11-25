@@ -166,19 +166,23 @@ SELECT COUNT(*) FROM clients WHERE adresse LIKE '%Paris%';
 
 1. Qu'est-ce qu'une **clé étrangère** ? Dans quelle table se trouve-t-elle ici, et pourquoi pas dans l'autre ?
 
-   > _Ma réponse :_ 
+   > _Ma réponse :_ Une clé étrangère pointe vers une ligne d’une autre table. Ici, chaque commande a un seul client, donc `commandes.client_id` pointe vers `clients.id`.
 
 2. Pourquoi est-ce une mauvaise idée de créer des colonnes `commande1`, `commande2`… dans la table `clients` ?
 
-   > _Ma réponse :_ 
+   > _Ma réponse :_ Un client peut avoir autant de commandes que nécessaire. Une ligne par commande évite d’ajouter des colonnes et facilite les recherches et les totaux.
 
 3. À quoi sert un `JOIN` ? Et un `GROUP BY` ?
 
-   > _Ma réponse :_ 
+   > _Ma réponse :_ `JOIN` associe les lignes de plusieurs tables. `GROUP BY` rassemble les lignes d’un même client pour calculer son nombre de commandes et le montant total.
 
 4. Pour la bibliothèque, quelles tables imaginez-vous ? Lesquelles contiendront des clés étrangères ?
 
-   > _Ma réponse :_ 
+   > _Ma réponse :_ Je prévois les tables `livres`, `utilisateurs` et `emprunts`. La table `emprunts` contient les clés étrangères du livre et de l’utilisateur.
+
+### 🧩 Défi
+
+> La fiche permet d’ajouter une commande. Si le client a des commandes, la suppression affiche leur nombre et un lien vers sa fiche.
 
 ---
 
